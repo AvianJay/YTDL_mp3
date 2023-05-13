@@ -4,3 +4,8 @@
 *.webm
 *.mp4
 *.m4a
+*.log
+dist/
+build/
+*.spec
+__pycache__/

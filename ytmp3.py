@@ -6,13 +6,11 @@ import re
 from PIL import Image
 from io import BytesIO
 from mutagen.id3 import ID3, APIC, TIT2, TPE1, error, TALB, TRCK
-import json
 import subprocess
 import importlib
-import ctypes
 import config
 
-if config.config['checkytdl']:
+if config.config['check_ytdl']:
     if not config.config['quiet']:
         print("Notify: Started Checking Youtube_dl, Use -dcy or --disable-check-ytdl to Disable checking Youtube_dl.")
     try:
@@ -42,7 +40,7 @@ else:
 ffmpeg_cmd = ["ffmpeg", "-version"]
 
 # 执行 ffmpeg 命令
-if config.config['checkffmpeg']:
+if config.config['check_ffmpeg']:
     if not config.config['quiet']:
         print("Notify: Started Checking FFmepg, Use -dcf or --disable-check-ff to Disable checking FFmepg.")
     try:
@@ -94,16 +92,8 @@ def get_youtube_metadata(video_url, config):
     ydl_opts = {'quiet': True, 'skip_download': True, 'forcetitle': True, 'forcejson': True, 'noplaylist': True}
     with youtube_dl.YoutubeDL(ydl_opts) as ydl:
         result = ydl.extract_info(video_url, download=False)
-        if not result.get('track', 1) == 1:
-            metadata['title'] = result.get('track')
-        elif not result.get('alt_title', 1) == 1:
-            metadata['title'] = result.get('alt_title')
-        else:
-            metadata['title'] = result.get('title', 'Untitled')
-        if result.get('artist', 1) == 1:
-            metadata['artist'] = result.get('channel', 'Unknown Channel')
-        else:
-            metadata['artist'] = result.get('artist')
+        metadata['title'] = result.get('track', result.get('alt_title', result.get('title', 'Untitled')))
+        metadata['artist'] = result.get('artist', result.get('channel', 'Unknown Artist'))
         if not result.get('album', 1) == 1:
             metadata['album'] = result.get('album')
         if not result.get('thumbnails', 1) == 1:
@@ -166,7 +156,7 @@ def downloadmp3(url, cfg=config.config, track_id=1):
   metadata = get_youtube_metadata(url, cfg)
   content = {}
   content['title'] = metadata['title']
-  content['filename'] = re.sub(lc, '' ,metadata['title']) + '.mp3'
+  content['filename'] = config.legalize_filename(metadata['title'])
   file_path = download_and_convert_to_mp3(url, re.sub(lc, '', metadata['title']))
   print(file_path)
   content[file_path] = file_path

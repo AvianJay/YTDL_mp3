@@ -34,13 +34,13 @@ def dl(playlist, config):
     with open(playlist['info']['title'] + '.m3u8', 'a') as f:
       f.write('#EXTINF:-1,' + content['title'] + '\n' + content['filename'] + '\n')
 
-def downloadplaylist(url, config):
+def downloadplaylist(url, cfg=config):
   playlist = Playlist.get(url)
 
   print(f'Videos Retrieved: {len(playlist["videos"])}')
   print('Found all the videos.')
 
-  dl(playlist, config)
+  dl(playlist, cfg)
 
 if __name__ == '__main__':
   if len(sys.argv) > 1:
