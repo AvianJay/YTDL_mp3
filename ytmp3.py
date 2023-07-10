@@ -1,6 +1,5 @@
 import os
 import sys
-from moviepy.editor import *
 import requests
 import re
 from PIL import Image
@@ -9,6 +8,12 @@ from mutagen.id3 import ID3, APIC, TIT2, TPE1, error, TALB, TRCK
 import subprocess
 import importlib
 import config
+import logging
+
+if config.config['quiet']:
+    youtube_dl.utils.bug_reports_message = lambda: ''
+    logger = youtube_dl.log.get_logger()
+    logger.setLevel(logging.ERROR)
 
 if config.config['check_ytdl']:
     if not config.config['quiet']:
@@ -64,9 +69,11 @@ if config.config['check_ffmpeg']:
         print('Please Install FFprobe Manually Before using ytdl_mp3.')
         sys.exit(1)
 
+
 # 从YouTube下载视频并将其转换为MP3文件
 def download_and_convert_to_mp3(video_url, title):
     ydl_opts = {
+        'quiet': config.config['quiet'],
         'format': 'bestaudio/best',
         'outtmpl': title + '.%(ext)s',
         'postprocessors': [{
@@ -85,6 +92,7 @@ def download_and_convert_to_mp3(video_url, title):
     elif ".mp4" in filename:
         filename = filename.replace(".mp4", ".mp3")
     return filename
+
 
 # 从YouTube获取视频标题、艺术家和图像
 def get_youtube_metadata(video_url, config):
@@ -109,7 +117,7 @@ def get_youtube_metadata(video_url, config):
 
             # 取得最高畫質的 url
             highest_resolution_url = urls_by_resolution[highest_resolution]
-            if config['thumbnail'] == 'square':
+            if config['square']:
                 response = requests.get(highest_resolution_url)
                 thumbnail_data = response.content
                 thumbnail = Image.open(BytesIO(thumbnail_data))
@@ -120,6 +128,7 @@ def get_youtube_metadata(video_url, config):
             else:
                 metadata['thumbnail'] = requests.get(highest_resolution_url).content
     return metadata
+
 
 # 将元数据添加到MP3文件中
 def add_metadata_to_mp3(file_path, metadata):
@@ -137,6 +146,7 @@ def add_metadata_to_mp3(file_path, metadata):
     except error:
         pass
 
+
 def downloadmp4(video_url, cfg=config.config):
     ydl_opts = {
         'outtmpl': '%(title)s.%(ext)s',
@@ -151,21 +161,22 @@ def downloadmp4(video_url, cfg=config.config):
         filename = ydl.prepare_filename(info)
     return filename
 
-def downloadmp3(url, cfg=config.config, track_id=1):
-  lc = r'[\\/*:?<>|"]'
-  metadata = get_youtube_metadata(url, cfg)
-  content = {}
-  content['title'] = metadata['title']
-  content['filename'] = config.legalize_filename(metadata['title'])
-  file_path = download_and_convert_to_mp3(url, re.sub(lc, '', metadata['title']))
-  print(file_path)
-  content[file_path] = file_path
-  if track_id:
-    metadata['track_id'] = str(track_id)
-  add_metadata_to_mp3(file_path, metadata)
-  return content
+
+def downloadmp3(url, cfg=config.config, track_id=False):
+    metadata = get_youtube_metadata(url, cfg)
+    content = {}
+    content['title'] = metadata['title']
+    file_path = download_and_convert_to_mp3(url, config.legalize_filename(content['title']))
+    content['filename'] = file_path.split('/')[-1]
+    print(file_path)
+    content[file_path] = file_path
+    if track_id:
+        metadata['track_id'] = str(track_id)
+    add_metadata_to_mp3(file_path, metadata)
+    return content
+
 
 if __name__ == '__main__':
-  if len(sys.argv) > 1:
-    video_url = sys.argv[1]
-    downloadmp3(video_url, cfg=config.config)
+    if len(sys.argv) > 1:
+        video_url = sys.argv[1]
+        downloadmp3(video_url, cfg=config.config)

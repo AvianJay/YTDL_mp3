@@ -35,7 +35,6 @@
     </property>
     <addaction name="save"/>
     <addaction name="reload"/>
-    <addaction name="save_as"/>
    </widget>
    <addaction name="menuFile"/>
   </widget>
@@ -48,11 +47,6 @@
   <action name="reload">
    <property name="text">
     <string>Reload</string>
-   </property>
-  </action>
-  <action name="save_as">
-   <property name="text">
-    <string>Save as</string>
    </property>
   </action>
  </widget>
