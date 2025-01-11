@@ -9,37 +9,12 @@ import subprocess
 import importlib
 import config
 import logging
+import yt_dlp as youtube_dl
 
 if config.config['quiet']:
     youtube_dl.utils.bug_reports_message = lambda: ''
     logger = youtube_dl.log.get_logger()
     logger.setLevel(logging.ERROR)
-
-if config.config['check_ytdl']:
-    if not config.config['quiet']:
-        print("Notify: Started Checking Youtube_dl, Use -dcy or --disable-check-ytdl to Disable checking Youtube_dl.")
-    try:
-        import youtube_dl
-
-        got = False
-        try:
-            y = {'quiet': True, 'skip_download': True, 'forcetitle': True, 'forcejson': True, 'noplaylist': True}
-            with youtube_dl.YoutubeDL(y) as ydl:
-                info = ydl.extract_info("https://www.youtube.com/watch?v=dQw4w9WgXcQ", download=False)
-                got = True
-        except:
-            got = False
-        if not got:
-            subprocess.run(['pip', 'uninstall', 'youtube_dl', '-y'])
-            subprocess.run(['pip', 'install', 'https://github.com/ytdl-org/youtube-dl/archive/refs/heads/master.zip'])
-            importlib.reload(youtube_dl)
-    except:
-        subprocess.run(['pip', 'install', 'https://github.com/ytdl-org/youtube-dl/archive/refs/heads/master.zip'])
-        import youtube_dl
-
-        importlib.reload(youtube_dl)
-else:
-    import youtube_dl
 
 # 定义要执行的 ffmpeg 命令
 ffmpeg_cmd = ["ffmpeg", "-version"]
@@ -105,18 +80,9 @@ def get_youtube_metadata(video_url, config):
         if not result.get('album', 1) == 1:
             metadata['album'] = result.get('album')
         if not result.get('thumbnails', 1) == 1:
-            thumbnails = result.get('thumbnails')
-            # 以畫質作為 key，儲存 url
-            urls_by_resolution = {}
-            for thumbnail in thumbnails:
-                urls_by_resolution[thumbnail['resolution']] = thumbnail['url']
-
-            # 取得最高畫質
-            resolutions = [thumbnail['resolution'] for thumbnail in thumbnails]
-            highest_resolution = sorted(resolutions)[-1]
-
-            # 取得最高畫質的 url
-            highest_resolution_url = urls_by_resolution[highest_resolution]
+            thumbnail = result.get('thumbnail')
+            
+            highest_resolution_url = thumbnail
             if config['square']:
                 response = requests.get(highest_resolution_url)
                 thumbnail_data = response.content

@@ -10,12 +10,12 @@ from tqdm import tqdm
 
 def dl(playlist):
   try:
-    os.mkdir(legalize_filename(playlist['info']['title']))
-    os.chdir(legalize_filename(playlist['info']['title']))
+    os.mkdir(config.legalize_filename(playlist['info']['title']))
+    os.chdir(config.legalize_filename(playlist['info']['title']))
   except:
-    os.mkdir(legalize_filename(playlist['info']['title']) + '(2)')
-    os.chdir(legalize_filename(playlist['info']['title']) + '(2)')
-  with open(legalize_filename(playlist['info']['title']) + '.m3u8', 'w') as f:
+    os.mkdir(config.legalize_filename(playlist['info']['title']) + '(2)')
+    os.chdir(config.legalize_filename(playlist['info']['title']) + '(2)')
+  with open(config.legalize_filename(playlist['info']['title']) + '.m3u8', 'w') as f:
     f.write('#EXTM3U\n')
   progress_bar = tqdm(total=len(playlist['videos']))
   counter = 0
